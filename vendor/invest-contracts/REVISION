@@ -1,0 +1,4 @@
+source=https://github.com/Tinkoff/investAPI
+revision=ce04fc7251515b555c0b959b2ec46c096bad1b03
+path=src/docs/contracts
+note=Official legacy repository pinned on 2026-11-14; current T-Bank GitLab was unavailable due local certificate trust.

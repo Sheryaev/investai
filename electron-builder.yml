@@ -1,0 +1,27 @@
+appId: com.investai.desktop
+productName: Invest AI
+copyright: Copyright © 2026
+directories:
+  output: release
+files:
+  - out/**/*
+  - vendor/**/*
+  - package.json
+  - node_modules/**/*
+  - "!node_modules/.cache/**/*"
+asarUnpack:
+  - node_modules/better-sqlite3/**/*
+npmRebuild: true
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: assets/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Invest AI
+  artifactName: Invest-AI-Setup-${version}.${ext}
