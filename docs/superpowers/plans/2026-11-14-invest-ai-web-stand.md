@@ -293,6 +293,7 @@ Expected: 3 passed.
 - Create: `web-stand/src/tokens.css`, `web-stand/src/styles.css`
 - Create: `web-stand/src/StandApp.tsx`, `web-stand/src/StandApp.test.tsx`, `web-stand/src/test-setup.ts`
 - Create: `web-stand/src/components/Sidebar.tsx`, `web-stand/src/components/Topbar.tsx`
+- Modify: `web-stand/package.json`, `web-stand/package-lock.json`, `web-stand/src/main.tsx` — локально поставляемый Manrope вместо незадуманного системного/Inter defaults.
 
 **Interfaces:**
 - Produces: `StandApp`, `Sidebar`, `Topbar`; состояние `theme: "light" | "dark"`, `agentOpen: boolean`, `agentPinned: boolean`.
