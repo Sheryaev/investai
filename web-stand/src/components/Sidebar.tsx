@@ -37,15 +37,14 @@ export function Sidebar() {
           );
 
           return label === "Обзор" ? (
-            <button
-              className="nav-item active"
-              type="button"
+            <span
+              className="nav-item nav-placeholder active"
               aria-label={label}
               aria-current="page"
               key={label}
             >
               {content}
-            </button>
+            </span>
           ) : (
             <span className="nav-item nav-placeholder" key={label}>
               {content}

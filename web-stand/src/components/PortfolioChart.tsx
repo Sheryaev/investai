@@ -9,10 +9,8 @@ interface PortfolioChartProps {
   period: Period;
 }
 
-const compactAxisValue = new Intl.NumberFormat("ru-RU", {
-  notation: "compact",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
+const axisValue = new Intl.NumberFormat("ru-RU", {
+  maximumFractionDigits: 0,
 });
 
 export function PortfolioChart({ account, period }: PortfolioChartProps) {
@@ -45,7 +43,7 @@ export function PortfolioChart({ account, period }: PortfolioChartProps) {
         axisLabel: {
           color: palette.muted,
           fontSize: 13,
-          formatter: (value: number) => compactAxisValue.format(value),
+          formatter: (value: number) => axisValue.format(value),
         },
         splitLine: { lineStyle: { color: palette.line } },
       },

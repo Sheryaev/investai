@@ -186,6 +186,12 @@ test("production document has a mobile viewport and no dead placeholder links", 
     .map((link) => link.getAttribute("href") ?? "")
     .filter((href) => href === "" || href === "#" || href.toLowerCase().startsWith("javascript:")));
   expect(deadLinks).toEqual([]);
+  await expect(page.getByRole("button", { name: "Обзор", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Обзор", exact: true })).toHaveCount(0);
+  const currentSection = page.locator(".nav-item.active");
+  await expect(currentSection).toHaveAttribute("aria-label", "Обзор");
+  await expect(currentSection).toHaveAttribute("aria-current", "page");
+  expect(await currentSection.evaluate((element) => element.tagName)).toBe("SPAN");
 });
 
 test.describe("message log auto-scroll", () => {
@@ -238,3 +244,50 @@ test("mobile account selector keeps enough width for its full label", async ({ p
   expect(selectWidth).toBeGreaterThanOrEqual(170);
   await expect(page.getByRole("button", { name: "Открыть агента" })).toHaveCSS("min-width", "44px");
 });
+
+
+async function expectChartContained(page: Page) {
+  const geometry = await page.locator(".dynamics-card").evaluate((card) => {
+    const chart = card.querySelector(".portfolio-chart");
+    const canvas = chart?.querySelector("canvas");
+    if (!chart || !canvas) throw new Error("Rendered chart canvas not found");
+    const cardBox = card.getBoundingClientRect();
+    const chartBox = chart.getBoundingClientRect();
+    const canvasBox = canvas.getBoundingClientRect();
+    return {
+      cardLeft: cardBox.left,
+      cardRight: cardBox.right,
+      chartLeft: chartBox.left,
+      chartRight: chartBox.right,
+      chartWidth: chartBox.width,
+      canvasLeft: canvasBox.left,
+      canvasRight: canvasBox.right,
+      canvasWidth: canvasBox.width,
+    };
+  });
+
+  expect(geometry.chartWidth).toBeGreaterThan(0);
+  expect(geometry.canvasWidth).toBeGreaterThan(0);
+  expect(geometry.chartLeft).toBeGreaterThanOrEqual(geometry.cardLeft);
+  expect(geometry.chartRight).toBeLessThanOrEqual(geometry.cardRight + 1);
+  expect(geometry.canvasLeft).toBeGreaterThanOrEqual(geometry.chartLeft);
+  expect(geometry.canvasRight).toBeLessThanOrEqual(geometry.chartRight + 1);
+}
+
+for (const [period, slug] of [["1Д", "1d"], ["1Н", "1n"]] as const) {
+  test(`period ${period} chart geometry and desktop/mobile screenshots`, async ({ page }) => {
+    await openStand(page);
+    await page.getByRole("button", { name: period, exact: true }).click();
+    await expect(page.getByRole("img", { name: `Динамика стоимости портфеля за ${period}` })).toBeVisible();
+    await page.waitForTimeout(350);
+    await expectChartContained(page);
+    await expectNoHorizontalOverflow(page);
+    await page.screenshot({ path: `test-results/overview-${slug}.png`, fullPage: true });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(150);
+    await expectChartContained(page);
+    await expectNoHorizontalOverflow(page);
+    await page.screenshot({ path: `test-results/mobile-${slug}.png`, fullPage: true });
+  });
+}

@@ -60,10 +60,14 @@ describe("StandApp", () => {
     expect(opener).toHaveFocus();
   });
 
-  it("keeps the current section named and placeholders non-interactive", () => {
+  it("keeps the current section named and exposes no dead Overview button or link", () => {
     render(<StandApp />);
 
-    expect(screen.getByRole("button", { name: "Обзор" })).toHaveAttribute("aria-label", "Обзор");
+    const current = screen.getByLabelText("Обзор");
+    expect(current.tagName).toBe("SPAN");
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("button", { name: "Обзор" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Обзор" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Портфель" })).not.toBeInTheDocument();
     expect(screen.getByText("Портфель").tagName).toBe("SPAN");
   });
