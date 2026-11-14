@@ -266,7 +266,7 @@
   border-radius: 10px;
   background-color: var(--surface-soft);
   color: var(--text);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .agent-icon-button {
@@ -355,7 +355,7 @@
   display: block;
   margin: 0 0 4px 3px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -385,7 +385,7 @@
   align-items: center;
   gap: 6px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .thinking svg {
@@ -786,6 +786,7 @@
 
 .position-name strong,
 .position-name small,
+.position-value small,
 .operation strong,
 .operation small {
   display: block;
@@ -877,6 +878,19 @@
 }
 
 @media (max-width: 420px) {
+  .top-actions {
+    grid-template-columns: minmax(0, 1fr) 44px 44px;
+  }
+
+  .agent-button {
+    min-width: 44px;
+    padding-inline: 0;
+  }
+
+  .agent-button span {
+    display: none;
+  }
+
   .hero-changes {
     flex-direction: column;
     gap: 4px;

@@ -35,6 +35,7 @@ export function AgentPanel(props: AgentPanelProps) {
   const thinkingRef = useRef(false);
   const responseTimer = useRef<number | null>(null);
   const panelRef = useRef<HTMLElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const propsRef = useRef(props);
   propsRef.current = props;
@@ -84,6 +85,13 @@ export function AgentPanel(props: AgentPanelProps) {
       if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, []);
+
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
+    const behavior = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    body.scrollTo?.({ top: body.scrollHeight, behavior });
+  }, [messages, thinking]);
 
   const send = (question: string) => {
     const text = question.trim();
@@ -145,7 +153,7 @@ export function AgentPanel(props: AgentPanelProps) {
             </button>
           </div>
         </header>
-        <div className="agent-body" role="log" aria-live="polite" aria-relevant="additions">
+        <div className="agent-body" role="log" aria-live="polite" aria-relevant="additions" ref={bodyRef}>
           {messages.length === 0 && (
             <div className="agent-welcome">
               <Sparkles size={28} aria-hidden="true" />

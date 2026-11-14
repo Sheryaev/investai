@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import type { EChartsOption } from "echarts";
+import type { EChartsCoreOption } from "echarts/core";
 import type { AllocationItem } from "../demo-data";
 import { ChartFrame, useChartPalette } from "./ChartFrame";
 
 export function AllocationChart({ items }: { items: AllocationItem[] }) {
   const palette = useChartPalette();
-  const option = useMemo<EChartsOption>(() => ({
+  const option = useMemo<EChartsCoreOption>(() => ({
     tooltip: {
       trigger: "item",
       backgroundColor: palette.surface,

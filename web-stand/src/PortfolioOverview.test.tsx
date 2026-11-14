@@ -14,7 +14,7 @@ const echartsMock = vi.hoisted(() => ({
   }>,
 }));
 
-vi.mock("echarts", () => ({ init: echartsMock.init }));
+vi.mock("echarts/core", () => ({ init: echartsMock.init, use: vi.fn() }));
 
 interface TestOption {
   series?: Array<{
@@ -134,4 +134,32 @@ it("disposes every chart when the overview unmounts", () => {
 
   expect(echartsMock.instances).toHaveLength(2);
   for (const instance of echartsMock.instances) expect(instance.dispose).toHaveBeenCalledTimes(1);
+});
+
+it("loads only the required modular ECharts runtime", async () => {
+  const { readFileSync } = await import("node:fs");
+  const chartFiles = [
+    "src/components/ChartFrame.tsx",
+    "src/components/PortfolioChart.tsx",
+    "src/components/AllocationChart.tsx",
+  ];
+
+  for (const file of chartFiles) {
+    expect(readFileSync(file, "utf8"), file).not.toMatch(/from\s+["']echarts["']/);
+  }
+
+  const frame = readFileSync("src/components/ChartFrame.tsx", "utf8");
+  expect(frame).toContain('from "echarts/core";');
+  expect(frame).toContain("use([LineChart, PieChart, GridComponent, TooltipComponent, CanvasRenderer]);");
+});
+
+it("keeps chart axis labels at the 13px readability minimum", () => {
+  render(<PortfolioOverview account={accounts[0]} period="3М" onPeriod={vi.fn()} />);
+  const option = lastOption() as unknown as {
+    xAxis?: { axisLabel?: { fontSize?: number } };
+    yAxis?: { axisLabel?: { fontSize?: number } };
+  };
+
+  expect(option.xAxis?.axisLabel?.fontSize).toBeGreaterThanOrEqual(13);
+  expect(option.yAxis?.axisLabel?.fontSize).toBeGreaterThanOrEqual(13);
 });

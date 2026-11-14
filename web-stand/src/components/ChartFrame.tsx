@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import * as echarts from "echarts";
-import type { EChartsOption } from "echarts";
+import { init, use } from "echarts/core";
+import type { ECharts, EChartsCoreOption } from "echarts/core";
+import { LineChart, PieChart } from "echarts/charts";
+import { GridComponent, TooltipComponent } from "echarts/components";
+import { CanvasRenderer } from "echarts/renderers";
+
+use([LineChart, PieChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
 interface ChartFrameProps {
-  option: EChartsOption;
+  option: EChartsCoreOption;
   label: string;
   className?: string;
 }
@@ -44,11 +49,11 @@ export function useChartPalette(): ChartPalette {
 
 export function ChartFrame({ option, label, className = "" }: ChartFrameProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<ReturnType<typeof echarts.init> | null>(null);
+  const chartRef = useRef<ECharts | null>(null);
 
   useEffect(() => {
     if (!ref.current) return;
-    const chart = echarts.init(ref.current);
+    const chart = init(ref.current);
     chartRef.current = chart;
     const observer = new ResizeObserver(() => chart.resize());
     observer.observe(ref.current);

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { EChartsOption } from "echarts";
+import type { EChartsCoreOption } from "echarts/core";
 import type { Account, Period } from "../demo-data";
 import { historyForPeriod } from "../demo-data";
 import { ChartFrame, useChartPalette } from "./ChartFrame";
@@ -11,7 +11,7 @@ interface PortfolioChartProps {
 
 export function PortfolioChart({ account, period }: PortfolioChartProps) {
   const palette = useChartPalette();
-  const option = useMemo<EChartsOption>(() => {
+  const option = useMemo<EChartsCoreOption>(() => {
     const history = historyForPeriod(account.history, period);
     return {
       animationDuration: 300,
@@ -31,13 +31,14 @@ export function PortfolioChart({ account, period }: PortfolioChartProps) {
         }).format(new Date(point.date))),
         axisLine: { lineStyle: { color: palette.line } },
         axisTick: { show: false },
-        axisLabel: { color: palette.muted, hideOverlap: true },
+        axisLabel: { color: palette.muted, hideOverlap: true, fontSize: 13 },
       },
       yAxis: {
         type: "value",
         scale: true,
         axisLabel: {
           color: palette.muted,
+          fontSize: 13,
           formatter: (value: number) => new Intl.NumberFormat("ru-RU", {
             notation: "compact",
             maximumFractionDigits: 1,

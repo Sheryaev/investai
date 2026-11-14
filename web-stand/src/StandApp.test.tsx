@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StandApp } from "./StandApp";
 
-vi.mock("echarts", () => ({
+vi.mock("echarts/core", () => ({
   init: () => ({ setOption: vi.fn(), resize: vi.fn(), dispose: vi.fn() }),
+  use: vi.fn(),
 }));
 
 describe("StandApp", () => {

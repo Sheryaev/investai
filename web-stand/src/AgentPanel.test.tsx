@@ -170,3 +170,34 @@ it("keeps the panel responsive and hides the backdrop only for wide pinning", as
   expect(css).toMatch(/@media \(min-width: 1280px\)\s*\{[\s\S]*?\.agent-is-pinned \.agent-backdrop\s*\{\s*display:\s*none;\s*\}/);
   expect(css).toMatch(/\.agent-icon-button\s*\{[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/s);
 });
+
+it.each([
+  { reducedMotion: false, expectedBehavior: "smooth" },
+  { reducedMotion: true, expectedBehavior: "auto" },
+])("scrolls new messages into view with reducedMotion=$reducedMotion", ({ reducedMotion, expectedBehavior }) => {
+  const originalMatchMedia = window.matchMedia;
+  window.matchMedia = vi.fn().mockReturnValue({
+    matches: reducedMotion,
+    media: "(prefers-reduced-motion: reduce)",
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(() => false),
+  } as MediaQueryList);
+
+  try {
+    render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+    const log = screen.getByRole("log");
+    const scrollTo = vi.fn();
+    log.scrollTo = scrollTo;
+    Object.defineProperty(log, "scrollHeight", { configurable: true, value: 480 });
+
+    fireEvent.click(screen.getByRole("button", { name: "Найти риски" }));
+
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 480, behavior: expectedBehavior });
+  } finally {
+    window.matchMedia = originalMatchMedia;
+  }
+});
