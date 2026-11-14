@@ -43,6 +43,22 @@ describe("StandApp", () => {
     expect(screen.getByRole("heading", { name: "Обзор" })).toBeVisible();
   });
 
+  it("returns focus to the topbar opener after Escape and after reopening", async () => {
+    const user = userEvent.setup();
+    render(<StandApp />);
+    const opener = screen.getByRole("button", { name: "Открыть агента" });
+
+    await user.click(opener);
+    expect(screen.getByRole("complementary", { name: "ИИ-агент" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("complementary", { name: "ИИ-агент" })).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+
+    await user.click(opener);
+    await user.click(screen.getByRole("button", { name: "Закрыть" }));
+    expect(opener).toHaveFocus();
+  });
+
   it("keeps the current section named and placeholders non-interactive", () => {
     render(<StandApp />);
 
