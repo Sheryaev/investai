@@ -1,7 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StandApp } from "./StandApp";
+
+vi.mock("echarts", () => ({
+  init: () => ({ setOption: vi.fn(), resize: vi.fn(), dispose: vi.fn() }),
+}));
 
 describe("StandApp", () => {
   beforeEach(() => {

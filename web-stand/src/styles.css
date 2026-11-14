@@ -180,16 +180,6 @@
   font-weight: 700;
 }
 
-.portfolio-overview {
-  min-width: 0;
-}
-
-.overview-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
 .card {
   min-width: 0;
   padding: 24px;
@@ -197,19 +187,6 @@
   border-radius: 20px;
   background: var(--surface);
   box-shadow: var(--shadow);
-}
-
-.key-value {
-  margin: 0;
-  font-size: clamp(32px, 4vw, 48px);
-  font-weight: 750;
-  line-height: 1.1;
-  letter-spacing: -.045em;
-}
-
-.financial-meta {
-  color: var(--muted);
-  font-size: 14px;
 }
 
 .agent-panel {
@@ -340,10 +317,6 @@
     padding-inline: 12px;
   }
 
-  .overview-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .card {
     padding: 20px;
   }
@@ -357,5 +330,294 @@
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+  }
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: -.025em;
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero-card {
+  display: flex;
+  grid-column: span 12;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.dynamics-card {
+  grid-column: span 8;
+}
+
+.allocation-card {
+  grid-column: span 4;
+}
+
+.positions-card {
+  grid-column: span 7;
+}
+
+.operations-card {
+  grid-column: span 5;
+}
+
+.label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.portfolio-value {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: -.045em;
+  white-space: nowrap;
+}
+
+.hero-changes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 20px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.positive {
+  color: var(--positive);
+}
+
+.negative {
+  color: var(--negative);
+}
+
+.periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.periods button {
+  min-width: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.periods button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.chart {
+  width: 100%;
+  min-width: 0;
+}
+
+.portfolio-chart {
+  height: 320px;
+  margin-top: 8px;
+}
+
+.allocation-chart {
+  height: 190px;
+}
+
+.allocation-legend,
+.position-list,
+.operation-list {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.allocation-legend {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.allocation-legend li {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.allocation-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.position-list,
+.operation-list {
+  margin-top: 8px;
+}
+
+.position {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 0;
+}
+
+.position + .position,
+.operation + .operation {
+  border-top: 1px solid var(--line);
+}
+
+.ticker {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.position-name {
+  min-width: 0;
+}
+
+.position-name strong,
+.position-name small,
+.operation strong,
+.operation small {
+  display: block;
+}
+
+.position-name small,
+.operation small,
+.position-value small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.position-name small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.position-value {
+  font-size: 14px;
+  font-weight: 650;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.position-yield {
+  min-width: 58px;
+  font-size: 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.operation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 0;
+}
+
+.operation > div {
+  min-width: 0;
+}
+
+.operation > span {
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .dynamics-card,
+  .allocation-card,
+  .positions-card,
+  .operations-card {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 620px) {
+  .hero-card {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .hero-changes {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .card {
+    padding: 18px;
+  }
+
+  .position {
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    gap: 8px 10px;
+  }
+
+  .position-yield {
+    grid-column: 2 / -1;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-changes {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .portfolio-value {
+    font-size: 30px;
+  }
+
+  .operation {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
   }
 }
