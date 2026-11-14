@@ -163,3 +163,18 @@ it("keeps chart axis labels at the 13px readability minimum", () => {
   expect(option.xAxis?.axisLabel?.fontSize).toBeGreaterThanOrEqual(13);
   expect(option.yAxis?.axisLabel?.fontSize).toBeGreaterThanOrEqual(13);
 });
+
+it("formats adjacent compact Y-axis ticks as distinct, short labels", () => {
+  render(<PortfolioOverview account={accounts[0]} period="3М" onPeriod={vi.fn()} />);
+  const option = lastOption() as unknown as {
+    yAxis?: { axisLabel?: { formatter?: (value: number) => string } };
+  };
+  const formatter = option.yAxis?.axisLabel?.formatter;
+  expect(formatter).toBeTypeOf("function");
+
+  const ticks = [1_100_000, 1_150_000, 1_200_000, 1_250_000, 1_300_000];
+  const labels = ticks.map((value) => formatter!(value));
+
+  expect(new Set(labels).size).toBe(ticks.length);
+  expect(labels.every((label) => label.length <= 9)).toBe(true);
+});
