@@ -126,6 +126,28 @@ for (const width of [375, 768, 1024, 1440]) {
   });
 }
 
+test("unpinned overlay keeps modal inertness across 1440 to 1279 to 1440 resize", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await openStand(page);
+  const opener = page.getByRole("button", { name: "Открыть агента" });
+  await opener.click();
+  const panel = page.getByRole("dialog", { name: "ИИ-агент" });
+
+  for (const width of [1440, 1279, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expect(panel).toBeVisible();
+    await expect(panel).toHaveAttribute("aria-modal", "true");
+    await expect(page.locator(".sidebar")).toHaveAttribute("inert", "");
+    await expect(page.locator(".workspace")).toHaveAttribute("inert", "");
+  }
+
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+  await expect(page.locator(".sidebar")).not.toHaveAttribute("inert");
+  await expect(page.locator(".workspace")).not.toHaveAttribute("inert");
+  await expect(opener).toBeFocused();
+});
+
 test("desktop pinning survives resize to a 1279px modal overlay without a pin control", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1000 });
   await openStand(page);

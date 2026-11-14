@@ -124,7 +124,6 @@ export function AgentPanel(props: AgentPanelProps) {
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      setBackgroundInert(false);
       const opener = openerRef.current;
       if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
