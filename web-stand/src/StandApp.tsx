@@ -40,6 +40,7 @@ export function StandApp() {
       </main>
       {agentOpen && (
         <AgentPanel
+          account={account}
           pinned={agentPinned}
           onPin={() => setAgentPinned((value) => !value)}
           onClose={() => {

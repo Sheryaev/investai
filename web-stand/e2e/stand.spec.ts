@@ -53,44 +53,64 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(dimensions.body, `body overflow: ${JSON.stringify(dimensions)}`).toBeLessThanOrEqual(dimensions.viewport);
 }
 
-test("light, dark and agent states", async ({ page }) => {
+test("light, dark and agent states expose correct overlay and pinned semantics", async ({ page }) => {
   await openStand(page);
   await page.screenshot({ path: "test-results/overview-light.png", fullPage: true });
 
-  await page.getByRole("button", { name: "Открыть агента" }).click();
-  await expect(page.getByRole("complementary", { name: "ИИ-агент" })).toBeVisible();
+  const opener = page.getByRole("button", { name: "Открыть агента" });
+  await opener.click();
+  const overlay = page.getByRole("dialog", { name: "ИИ-агент" });
+  await expect(overlay).toBeVisible();
+  await expect(overlay).toHaveAttribute("aria-modal", "true");
+  await expect(page.locator(".sidebar")).toHaveAttribute("inert", "");
+  await expect(page.locator(".workspace")).toHaveAttribute("inert", "");
+  await expect(page.getByRole("button", { name: "Закрыть агента" })).toHaveAttribute("tabindex", "-1");
   await page.getByRole("button", { name: "Найти риски" }).click();
   await expect(page.getByText(/концентрация в акциях/)).toBeVisible();
   await page.screenshot({ path: "test-results/agent-light.png", fullPage: true });
 
   await page.getByRole("button", { name: "Закрепить" }).click();
-  await expect(page.getByRole("complementary", { name: "ИИ-агент" })).toHaveCSS("position", "sticky");
+  const pinned = page.getByRole("complementary", { name: "ИИ-агент" });
+  await expect(pinned).toHaveCSS("position", "sticky");
+  await expect(pinned).not.toHaveAttribute("aria-modal", "true");
+  await expect(page.locator(".sidebar")).not.toHaveAttribute("inert");
+  await expect(page.locator(".workspace")).not.toHaveAttribute("inert");
+  await expect(page.getByRole("button", { name: "Закрыть агента" })).toHaveCount(0);
   await page.getByRole("button", { name: "Тёмная тема" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.screenshot({ path: "test-results/agent-dark.png", fullPage: true });
 
   await page.getByRole("button", { name: "Закрыть", exact: true }).click();
-  await expect(page.getByRole("complementary", { name: "ИИ-агент" })).toHaveCount(0);
+  await expect(pinned).toHaveCount(0);
+  await expect(opener).toBeFocused();
   await page.screenshot({ path: "test-results/overview-dark.png", fullPage: true });
   await expectNoHorizontalOverflow(page);
 });
 
-test("mobile agent opens, closes with Escape, and does not overflow", async ({ page }) => {
+test("mobile agent hides pin, traps focus as a dialog, and cleans up inert on Escape", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await openStand(page);
   await expectNoHorizontalOverflow(page);
   await page.screenshot({ path: "test-results/mobile-overview.png", fullPage: true });
 
-  await page.getByRole("button", { name: "Открыть агента" }).click();
-  const panel = page.getByRole("complementary", { name: "ИИ-агент" });
+  const opener = page.getByRole("button", { name: "Открыть агента" });
+  await opener.click();
+  const panel = page.getByRole("dialog", { name: "ИИ-агент" });
   await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute("aria-modal", "true");
+  await expect(panel).toBeFocused();
+  await expect(page.locator(".agent-pin-button")).toBeHidden();
+  await expect(page.locator(".sidebar")).toHaveAttribute("inert", "");
+  await expect(page.locator(".workspace")).toHaveAttribute("inert", "");
   await page.getByRole("button", { name: "Найти риски" }).click();
   await expect(page.getByText(/концентрация в акциях/)).toBeVisible();
   await page.screenshot({ path: "test-results/mobile-agent.png", fullPage: true });
 
   await page.keyboard.press("Escape");
   await expect(panel).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Открыть агента" })).toBeFocused();
+  await expect(page.locator(".sidebar")).not.toHaveAttribute("inert");
+  await expect(page.locator(".workspace")).not.toHaveAttribute("inert");
+  await expect(opener).toBeFocused();
   await expectNoHorizontalOverflow(page);
 });
 
@@ -101,13 +121,13 @@ for (const width of [375, 768, 1024, 1440]) {
     await expectNoHorizontalOverflow(page);
 
     await page.getByRole("button", { name: "Открыть агента" }).click();
-    await expect(page.getByRole("complementary", { name: "ИИ-агент" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "ИИ-агент" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 }
 
-test("pinning switches from overlay at 1279px to side-by-side at 1280px and preserves selection", async ({ page }) => {
-  await page.setViewportSize({ width: 1279, height: 1000 });
+test("desktop pinning survives resize to a 1279px modal overlay without a pin control", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
   await openStand(page);
   await page.getByLabel("Счёт").selectOption("iis");
   await expect(page.getByLabel("Счёт")).toHaveValue("iis");
@@ -116,25 +136,28 @@ test("pinning switches from overlay at 1279px to side-by-side at 1280px and pres
   await expect(page.getByRole("button", { name: "1М", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("img", { name: "Динамика стоимости портфеля за 1М" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Открыть агента" }).click();
-  await page.getByRole("button", { name: "Закрепить" }).click();
-  const overlay = page.getByRole("complementary", { name: "ИИ-агент" });
-  await expect(overlay).toHaveCSS("position", "fixed");
-  await expect(page.getByRole("button", { name: "Закрыть агента" })).toBeVisible();
-  expect(await page.locator(".stand-shell").evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length)).toBe(2);
-  await page.getByRole("button", { name: "Закрыть", exact: true }).click();
-
-  await page.setViewportSize({ width: 1280, height: 1000 });
-  await page.getByRole("button", { name: "Открыть агента" }).click();
+  const opener = page.getByRole("button", { name: "Открыть агента" });
+  await opener.click();
+  await expect(page.locator(".agent-pin-button")).toBeVisible();
   await page.getByRole("button", { name: "Закрепить" }).click();
   const pinned = page.getByRole("complementary", { name: "ИИ-агент" });
   await expect(pinned).toHaveCSS("position", "sticky");
-  await expect(page.getByRole("button", { name: "Закрыть агента" })).toBeHidden();
   expect(await page.locator(".stand-shell").evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length)).toBe(3);
-  await expect(page.getByLabel("Счёт")).toHaveValue("iis");
-  await expect(page.getByRole("button", { name: "1М", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".workspace")).not.toHaveAttribute("inert");
+
+  await page.setViewportSize({ width: 1279, height: 1000 });
+  const overlay = page.getByRole("dialog", { name: "ИИ-агент" });
+  await expect(overlay).toHaveCSS("position", "fixed");
+  await expect(overlay).toHaveAttribute("aria-modal", "true");
+  await expect(page.locator(".agent-pin-button")).toBeHidden();
+  await expect(page.getByRole("button", { name: "Закрыть агента" })).toBeVisible();
+  await expect(page.locator(".workspace")).toHaveAttribute("inert", "");
+  expect(await page.locator(".stand-shell").evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length)).toBe(2);
 
   await page.getByRole("button", { name: "Закрыть", exact: true }).click();
+  await expect(overlay).toHaveCount(0);
+  await expect(page.locator(".workspace")).not.toHaveAttribute("inert");
+  await expect(opener).toBeFocused();
   await expect(page.getByLabel("Счёт")).toHaveValue("iis");
   await expect(page.getByRole("button", { name: "1М", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText(/746.*200.*₽/)).toBeVisible();
@@ -171,7 +194,7 @@ test("quick and custom questions answer observably and Escape closes", async ({ 
   await expect(composer).toHaveValue("");
 
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("complementary", { name: "ИИ-агент" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "ИИ-агент" })).toHaveCount(0);
   await expect(opener).toBeFocused();
 });
 
@@ -223,18 +246,47 @@ test("portfolio weights stay on their own line", async ({ page }) => {
   await expect(page.locator(".position-value small").first()).toHaveCSS("display", "block");
 });
 
-test("agent secondary text meets the 13px readability minimum", async ({ page }) => {
+test("agent primary text is 16px and compact controls remain readable", async ({ page }) => {
   await openStand(page);
   await page.getByRole("button", { name: "Открыть агента" }).click();
-  const fontSizes: number[] = [];
-  fontSizes.push(await page.getByLabel("Модель").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize)));
+  const composer = page.getByLabel("Сообщение агенту");
+  await expect(composer).toHaveCSS("font-size", "16px");
 
   await page.getByRole("button", { name: "Найти риски" }).click();
-  fontSizes.push(await page.getByRole("status").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize)));
-  await expect(page.getByText(/концентрация в акциях/)).toBeVisible();
-  fontSizes.push(await page.locator(".message.agent small").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize)));
+  await expect(page.locator(".message.user p")).toHaveCSS("font-size", "16px");
+  await expect(page.locator(".message.agent p")).toHaveCSS("font-size", "16px");
 
-  expect(fontSizes.every((size) => size >= 13), `font sizes: ${fontSizes.join(", ")}`).toBe(true);
+  const compactSizes: number[] = [];
+  compactSizes.push(await page.getByLabel("Модель").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize)));
+  compactSizes.push(await page.locator(".message.agent small").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize)));
+  expect(compactSizes.every((size) => size >= 13 && size <= 14), `compact font sizes: ${compactSizes.join(", ")}`).toBe(true);
+});
+
+test("IIS agent answers use only the selected account figures", async ({ page }) => {
+  await openStand(page);
+  await page.getByLabel("Счёт").selectOption("iis");
+  await page.getByRole("button", { name: "Открыть агента" }).click();
+
+  await page.getByRole("button", { name: "Что изменилось?" }).click();
+  const change = page.locator(".message.agent").last();
+  await expect(change).toContainText("снизился на 1 240 ₽");
+  await expect(change).not.toContainText("4 380");
+  await expect(change).not.toContainText("вырос");
+
+  const composer = page.getByLabel("Сообщение агенту");
+  await composer.fill("Дай обзор");
+  await composer.press("Enter");
+  const overview = page.locator(".message.agent").last();
+  await expect(overview).toContainText("11,8%");
+  await expect(overview).toContainText("68,2%");
+  await expect(overview).not.toContainText("18,24%");
+  await expect(overview).not.toContainText("76,4%");
+
+  await composer.fill("Найди риски портфеля");
+  await composer.press("Enter");
+  const risks = page.locator(".message.agent").last();
+  await expect(risks).toContainText("68,2%");
+  await expect(risks).not.toContainText("76,4%");
 });
 
 test("mobile account selector keeps enough width for its full label", async ({ page }) => {

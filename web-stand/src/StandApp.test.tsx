@@ -40,7 +40,7 @@ describe("StandApp", () => {
 
     await user.click(screen.getByRole("button", { name: "Открыть агента" }));
 
-    expect(screen.getByRole("complementary", { name: "ИИ-агент" })).toBeVisible();
+    expect(screen.getByRole("dialog", { name: "ИИ-агент" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Обзор" })).toBeVisible();
   });
 
@@ -50,13 +50,31 @@ describe("StandApp", () => {
     const opener = screen.getByRole("button", { name: "Открыть агента" });
 
     await user.click(opener);
-    expect(screen.getByRole("complementary", { name: "ИИ-агент" })).toHaveFocus();
+    expect(screen.getByRole("dialog", { name: "ИИ-агент" })).toHaveFocus();
     await user.keyboard("{Escape}");
-    expect(screen.queryByRole("complementary", { name: "ИИ-агент" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "ИИ-агент" })).not.toBeInTheDocument();
     expect(opener).toHaveFocus();
 
     await user.click(opener);
     await user.click(screen.getByRole("button", { name: "Закрыть" }));
+    expect(opener).toHaveFocus();
+  });
+
+  it("makes the overlay modal, removes background inert on close, and restores focus", async () => {
+    const user = userEvent.setup();
+    render(<StandApp />);
+    const opener = screen.getByRole("button", { name: "Открыть агента" });
+
+    await user.click(opener);
+
+    expect(screen.getByRole("dialog", { name: "ИИ-агент" })).toHaveAttribute("aria-modal", "true");
+    expect(document.querySelector(".sidebar")).toHaveAttribute("inert");
+    expect(document.querySelector(".workspace")).toHaveAttribute("inert");
+
+    await user.keyboard("{Escape}");
+
+    expect(document.querySelector(".sidebar")).not.toHaveAttribute("inert");
+    expect(document.querySelector(".workspace")).not.toHaveAttribute("inert");
     expect(opener).toHaveFocus();
   });
 

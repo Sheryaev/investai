@@ -33,7 +33,7 @@ function makeHistory(total: number, offset: number): HistoryPoint[] {
     const wave = Math.sin(index / 8 + offset) * 0.018 + Math.cos(index / 17) * 0.011;
     return {
       date: new Date(end - (180 - index) * 86_400_000).toISOString(),
-      value: Math.round(total * (0.79 + progress * 0.21 + wave)),
+      value: index === 180 ? total : Math.round(total * (0.79 + progress * 0.21 + wave)),
     };
   });
 }
@@ -93,8 +93,21 @@ export function formatMoney(value: number): string {
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.trunc(value))} ₽`;
 }
 
-export function demoAnswer(agent: AgentName, question: string): string {
-  if (question.includes("риск")) return "Главный риск — концентрация в акциях и пяти крупнейших позициях. Сбербанк и Яндекс составляют 46,3% портфеля.";
-  if (question.includes("измен")) return "За сегодня портфель вырос на 4 380 ₽. Основной вклад внесли Сбербанк и Т-Технологии.";
-  return `${agent}: портфель выглядит умеренно сконцентрированным. Доходность с начала периода 18,24%, доля акций 76,4%.`;
+const percentValue = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 });
+
+export function demoAnswer(agent: AgentName, question: string, account: Account): string {
+  const stocks = account.allocation.find((item) => item.label === "Акции")?.value ?? 0;
+  const leaders = [...account.positions].sort((a, b) => b.weight - a.weight).slice(0, 2);
+  const leaderNames = leaders.map((position) => position.name).join(" и ");
+  const leaderWeight = leaders.reduce((sum, position) => sum + position.weight, 0);
+
+  if (question.includes("риск")) {
+    return `Главный риск — концентрация в акциях: их доля ${percentValue.format(stocks)}%. ${leaderNames} составляют ${percentValue.format(leaderWeight)}% портфеля.`;
+  }
+  if (question.includes("измен")) {
+    if (account.dayChange === 0) return "За сегодня стоимость портфеля не изменилась.";
+    const direction = account.dayChange > 0 ? "вырос" : "снизился";
+    return `За сегодня портфель ${direction} на ${formatMoney(Math.abs(account.dayChange))}. Основной вклад внесли ${leaderNames}.`;
+  }
+  return `${agent}: портфель выглядит умеренно сконцентрированным. Доходность с начала периода ${percentValue.format(account.totalYieldPct)}%, доля акций ${percentValue.format(stocks)}%.`;
 }

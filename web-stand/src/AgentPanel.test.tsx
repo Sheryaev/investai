@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
+import { accounts } from "./demo-data";
 import { AgentPanel } from "./components/AgentPanel";
 
 const originalInnerWidth = window.innerWidth;
@@ -10,9 +11,31 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it("captures the IIS at send time when the selected account changes before the answer", async () => {
+  vi.useFakeTimers();
+  const props = { pinned: false, onPin: vi.fn(), onClose: vi.fn() };
+  const { rerender } = render(<AgentPanel {...props} account={accounts[1]} />);
+  fireEvent.click(screen.getByRole("button", { name: "Что изменилось?" }));
+
+  rerender(<AgentPanel {...props} account={accounts[0]} />);
+  await act(() => vi.advanceTimersByTimeAsync(450));
+
+  const response = screen.getByText(/За сегодня портфель/).textContent ?? "";
+  expect(response).toMatch(/снизился на 1.*240.*₽/);
+  expect(response).not.toMatch(/4.*380/);
+});
+
+it("exposes an unpinned panel as a modal dialog rather than a complementary landmark", () => {
+  render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+
+  const panel = screen.getByRole("dialog", { name: "ИИ-агент" });
+  expect(panel).toHaveAttribute("aria-modal", "true");
+  expect(screen.queryByRole("complementary", { name: "ИИ-агент" })).not.toBeInTheDocument();
+});
+
 it("answers a quick question with the selected demo agent", async () => {
   vi.useFakeTimers();
-  render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+  render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
 
   fireEvent.change(screen.getByLabelText("Модель"), { target: { value: "Kimi" } });
   fireEvent.click(screen.getByRole("button", { name: "Найти риски" }));
@@ -27,7 +50,7 @@ it("answers a quick question with the selected demo agent", async () => {
 
 it("sends with Enter and keeps Shift+Enter as a newline", async () => {
   const user = userEvent.setup();
-  render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+  render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
   const composer = screen.getByLabelText("Сообщение агенту");
 
   await user.type(composer, "Первая строка{shift>}{enter}{/shift}Вторая строка");
@@ -47,7 +70,7 @@ it("sends with Enter and keeps Shift+Enter as a newline", async () => {
 
 it("prevents duplicate sends while a response is pending", async () => {
   vi.useFakeTimers();
-  render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+  render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
   const composer = screen.getByLabelText("Сообщение агенту");
   fireEvent.change(composer, { target: { value: "Только один вопрос" } });
 
@@ -61,7 +84,7 @@ it("prevents duplicate sends while a response is pending", async () => {
 
 it("keeps the agent selected at send time on the response", async () => {
   vi.useFakeTimers();
-  render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+  render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
   fireEvent.change(screen.getByLabelText("Модель"), { target: { value: "Codex" } });
   fireEvent.change(screen.getByLabelText("Сообщение агенту"), { target: { value: "Дай обзор" } });
 
@@ -76,7 +99,7 @@ it("keeps the agent selected at send time on the response", async () => {
 
 it("clears a pending demo response timer on unmount", () => {
   vi.useFakeTimers();
-  const { unmount } = render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+  const { unmount } = render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
   const unrelatedTimers = vi.getTimerCount();
   fireEvent.click(screen.getByRole("button", { name: "Найти риски" }));
   expect(vi.getTimerCount()).toBe(unrelatedTimers + 1);
@@ -89,9 +112,9 @@ it("clears a pending demo response timer on unmount", () => {
 it("moves initial focus into the panel and closes on Escape", async () => {
   const user = userEvent.setup();
   const onClose = vi.fn();
-  render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={onClose} />);
+  render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={onClose} />);
 
-  expect(screen.getByRole("complementary", { name: "ИИ-агент" })).toHaveFocus();
+  expect(screen.getByRole("dialog", { name: "ИИ-агент" })).toHaveFocus();
   await user.keyboard("{Escape}");
   expect(onClose).toHaveBeenCalledTimes(1);
 });
@@ -99,7 +122,7 @@ it("moves initial focus into the panel and closes on Escape", async () => {
 it("traps Tab and Shift+Tab in an unpinned desktop overlay", async () => {
   Object.defineProperty(window, "innerWidth", { configurable: true, value: 1440 });
   const user = userEvent.setup();
-  render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+  render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
   const model = screen.getByLabelText("Модель");
   const composer = screen.getByLabelText("Сообщение агенту");
 
@@ -114,7 +137,7 @@ it("traps Tab and Shift+Tab in an unpinned desktop overlay", async () => {
 it("keeps a previously pinned panel modal below 1280px", async () => {
   Object.defineProperty(window, "innerWidth", { configurable: true, value: 1279 });
   const user = userEvent.setup();
-  render(<AgentPanel pinned onPin={vi.fn()} onClose={vi.fn()} />);
+  render(<AgentPanel account={accounts[0]} pinned onPin={vi.fn()} onClose={vi.fn()} />);
   const model = screen.getByLabelText("Модель");
   const composer = screen.getByLabelText("Сообщение агенту");
 
@@ -129,7 +152,7 @@ it("does not trap focus in a genuinely pinned wide panel", async () => {
   const user = userEvent.setup();
   render(
     <>
-      <AgentPanel pinned onPin={vi.fn()} onClose={vi.fn()} />
+      <AgentPanel account={accounts[0]} pinned onPin={vi.fn()} onClose={vi.fn()} />
       <button type="button">После панели</button>
     </>,
   );
@@ -148,7 +171,7 @@ it("invokes pin and close controls and restores focus to the opener", async () =
   opener.textContent = "Открыть агента";
   document.body.appendChild(opener);
   opener.focus();
-  const { unmount } = render(<AgentPanel pinned={false} onPin={onPin} onClose={onClose} />);
+  const { unmount } = render(<AgentPanel account={accounts[0]} pinned={false} onPin={onPin} onClose={onClose} />);
 
   await user.click(screen.getByRole("button", { name: "Закрепить" }));
   expect(onPin).toHaveBeenCalledTimes(1);
@@ -188,7 +211,7 @@ it.each([
   } as MediaQueryList);
 
   try {
-    render(<AgentPanel pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
+    render(<AgentPanel account={accounts[0]} pinned={false} onPin={vi.fn()} onClose={vi.fn()} />);
     const log = screen.getByRole("log");
     const scrollTo = vi.fn();
     log.scrollTo = scrollTo;
